@@ -1,41 +1,44 @@
-import express from 'express'
-import fetch from 'node-fetch'
-import cors from 'cors'
+import express, { json } from 'express';
+import axios from 'axios';
+import cors from 'cors';
 
-const PORT = 5000
-const app = express()
+const app = express();
+const port = 5000;
 
-app.use(cors())
+// Middleware
+app.use(json());
+app.use(cors());
 
-const corsOptions = {
-    origin: "http://localhost:8080"
-}
+const TIMEOUT_MS = 2000; // Set timeout to 5 seconds
 
-const requestEndpoint = "some_backend:port"
+app.get('', async (req, res) => {
+    const { url } = req.query;
 
-app.get('', cors(corsOptions), async (req, res) => {
-    const fetchOptions = {
-        method: "GET"
-    }
-    console.log(`URL Params (date): ${req.query.date}`)
-    
-    const response = await fetch(`${requestEndpoint}&date=${req.query.date}`, fetchOptions)
-    const jsonResponse = await response.json()
-    res.json(jsonResponse)
-})
-
-app.get("/somepath/:param1/:param2", async (req, res) => {
-    const fetchOps = {
-        method: "GET"
+    if (!url) {
+        return res.status(400).json({ error: 'URL is required' });
     }
 
-    let param1 = req.params.param1
-    let param2 = req.params.param2
+    const checkHost = async (protocol) => {
+        try {
+            const response = await axios.get(`${protocol}://${url}`, { timeout: TIMEOUT_MS });
+            return response.status >= 200 && response.status < 400;
+        } catch (error) {
+            if (error.code === 'ECONNABORTED') {
+                console.error(`Timeout occurred while trying to access ${protocol}://${url}`);
+            }
+            return false;
+        }
+    };
 
-    const response = await fetch(`some_backend:port?param1=${currency}&param2=${param2}`, fetchOps)
-    const jsonResponse = await response.json()
+    const isAccessible = await checkHost('http') || await checkHost('https');
 
-    res.json(jsonResponse)
-})
+    if (isAccessible) {
+        return res.json(200)
+    } else {
+        return res.json(500)
+    }
+});
 
-app.listen(PORT, () => console.log(`Cors Helper App is started and listening on port ${PORT}`))
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
