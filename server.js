@@ -14,7 +14,7 @@ const httpsAgent = new https.Agent({
     rejectUnauthorized: false
 });
 
-const TIMEOUT_MS = 2000; // Set timeout to 5 seconds
+const TIMEOUT_MS = 7000; // Set timeout to 5 seconds
 const MAX_REDIRECTS = 5;
 
 app.get('', async (req, res) => {
