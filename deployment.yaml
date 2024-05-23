@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cors-helper
+  namespace: bogdan
+  labels:
+    app: cors-helper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cors-helper
+  template:
+    metadata:
+      labels:
+        app: cors-helper
+    spec:
+      containers:
+      - name: cors-helper
+        image: registry:443/cors-helper
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
